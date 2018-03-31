@@ -1,0 +1,14 @@
+INSERT INTO esdbempresarial.tbl_banco(razonsocial) VALUES ('Banco Lima');
+INSERT INTO esdbempresarial.tbl_banco(razonsocial) VALUES ('Banco Huanuco');
+
+INSERT INTO esdbempresarial.tbl_empresa(razonsocial) VALUES ('B. Soft Group');
+INSERT INTO esdbempresarial.tbl_empresa(razonsocial) VALUES ('Fision Peru');
+
+INSERT INTO esdbempresarial.tbl_colaboradores(nombres, banco)VALUES ('Miguel Diaz Sarmiento', 1);
+INSERT INTO esdbempresarial.tbl_colaboradores(nombres, banco)VALUES ('Jose Carlos Mariategui', 1);
+
+
+INSERT INTO esdbempresarial.tbl_socios(nombres, representante, empresa) VALUES ('Walter Gonzales Daza', 'S', 1);
+INSERT INTO esdbempresarial.tbl_socios(nombres, representante, empresa) VALUES ('Miguel Angel Diaz', null, 1);
+-------
+select esdbempresarial.fn_ingresar_bandeja('31/03/2018','Revisión Inicial del File',1,NULL,NULL);

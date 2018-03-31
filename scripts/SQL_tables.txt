@@ -1,0 +1,99 @@
+DROP TABLE IF EXISTS esdbempresarial.TBL_SITUACION;
+DROP TABLE IF EXISTS esdbempresarial.TBL_EVALUACION;
+DROP TABLE IF EXISTS esdbempresarial.TBL_BANDEJA;
+DROP TABLE IF EXISTS esdbempresarial.TBL_DOCUMENTOS;
+DROP TABLE IF EXISTS esdbempresarial.TBL_FILE;
+
+DROP TABLE IF EXISTS esdbempresarial.TBL_SOCIOS;
+DROP TABLE IF EXISTS esdbempresarial.TBL_EMPRESA;
+DROP TABLE IF EXISTS esdbempresarial.TBL_COLABORADORES;
+DROP TABLE IF EXISTS esdbempresarial.TBL_BANCO;
+--ALTER TABLE DROP CONSTRAINT IF EXISTS esdbempresarial.xpktbl_empresa;
+CREATE TABLE esdbempresarial.TBL_EMPRESA (
+    codigo        INTEGER NOT NULL,
+	razonsocial   VARCHAR(200) NULL 
+) TABLESPACE ts_data;
+ALTER TABLE IF EXISTS esdbempresarial.TBL_EMPRESA ADD CONSTRAINT XPKTBL_EMPRESA PRIMARY KEY(codigo);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_EMPRESA ALTER COLUMN codigo SET DEFAULT nextval('esdbempresarial."SEQ_EMPRESA"');
+
+CREATE TABLE esdbempresarial.TBL_SOCIOS (
+    codigo        INTEGER NOT NULL,
+	nombres       VARCHAR(200) NOT NULL,
+	representante CHAR(1) NULL, --S NULL
+	empresa       INTEGER NOT NULL
+) TABLESPACE ts_data;
+ALTER TABLE IF EXISTS esdbempresarial.TBL_SOCIOS ADD CONSTRAINT XPKTBL_SOCIOS PRIMARY KEY(codigo);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_SOCIOS ADD CONSTRAINT R1 FOREIGN KEY (empresa) REFERENCES esdbempresarial.TBL_EMPRESA(codigo);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_SOCIOS ALTER COLUMN codigo SET DEFAULT nextval('esdbempresarial."SEQ_SOCIOS"');
+
+CREATE TABLE esdbempresarial.TBL_BANCO (
+    codigo        INTEGER NOT NULL,
+	razonsocial   VARCHAR(200) NULL 
+) TABLESPACE ts_data;
+ALTER TABLE IF EXISTS esdbempresarial.TBL_BANCO ADD CONSTRAINT XPKTBL_BANCO PRIMARY KEY(codigo);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_BANCO ALTER COLUMN codigo SET DEFAULT nextval('esdbempresarial."SEQ_BANCO"');
+
+CREATE TABLE esdbempresarial.TBL_COLABORADORES (
+    codigo        INTEGER NOT NULL,
+	nombres       VARCHAR(200) NOT NULL,
+	banco       INTEGER NOT NULL
+) TABLESPACE ts_data;
+ALTER TABLE IF EXISTS esdbempresarial.TBL_COLABORADORES ADD CONSTRAINT XPKTBL_COLABORADORES PRIMARY KEY(codigo);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_COLABORADORES ADD CONSTRAINT R2 FOREIGN KEY (banco) REFERENCES esdbempresarial.TBL_COLABORADORES(codigo);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_COLABORADORES ALTER COLUMN codigo SET DEFAULT nextval('esdbempresarial."SEQ_COLABORADORES"');
+
+CREATE TABLE esdbempresarial.TBL_FILE (
+    codigo        INTEGER NOT NULL,
+	socio         INTEGER NOT NULL,
+	causal        VARCHAR(200) NULL 
+) TABLESPACE ts_data;
+ALTER TABLE IF EXISTS esdbempresarial.TBL_FILE ADD CONSTRAINT XPKTBL_FILE PRIMARY KEY(codigo,socio);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_FILE ADD CONSTRAINT R3 FOREIGN KEY (socio) REFERENCES esdbempresarial.TBL_SOCIOS(codigo);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_FILE ALTER COLUMN codigo SET DEFAULT nextval('esdbempresarial."SEQ_FILE"') ;
+
+CREATE TABLE esdbempresarial.TBL_DOCUMENTOS (
+    codigo        INTEGER NOT NULL,
+	file          INTEGER NOT NULL,
+	socio         INTEGER NOT NULL,
+	descripcion   VARCHAR(200) NULL 
+) TABLESPACE ts_data;
+ALTER TABLE IF EXISTS esdbempresarial.TBL_DOCUMENTOS ADD CONSTRAINT XPKTBL_DOCUMENTOS PRIMARY KEY(codigo,file,socio);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_DOCUMENTOS ADD CONSTRAINT R4 FOREIGN KEY (file,socio) REFERENCES esdbempresarial.TBL_FILE(codigo,socio);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_DOCUMENTOS ALTER COLUMN codigo SET DEFAULT nextval('esdbempresarial."SEQ_DOCUMENTOS"');
+
+
+CREATE TABLE esdbempresarial.TBL_BANDEJA (
+    codigo        INTEGER NOT NULL,
+	enviapor      INTEGER NULL,
+	fechaingreso  TIMESTAMP NOT NULL,
+	fechaatencion TIMESTAMP NULL,
+	causal        VARCHAR(200) NULL,
+	colaborador   INTEGER NOT NULL
+) TABLESPACE ts_data;
+ALTER TABLE IF EXISTS esdbempresarial.TBL_BANDEJA ADD CONSTRAINT XPKTBL_BANDEJA PRIMARY KEY(codigo);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_BANDEJA ADD CONSTRAINT R5 FOREIGN KEY (colaborador) REFERENCES esdbempresarial.TBL_COLABORADORES(codigo);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_BANDEJA ALTER COLUMN codigo SET DEFAULT nextval('esdbempresarial."SEQ_BANDEJA"');
+
+CREATE TABLE esdbempresarial.TBL_EVALUACION (
+    bandeja       INTEGER NOT NULL,
+	file          INTEGER NOT NULL,
+	socio         INTEGER NOT NULL,
+	causal        VARCHAR(200) NULL,
+    fechainicio   TIMESTAMP NOT NULL,
+	fechafin      TIMESTAMP NULL
+	
+) TABLESPACE ts_data;
+ALTER TABLE IF EXISTS esdbempresarial.TBL_EVALUACION ADD CONSTRAINT XPKTBL_EVALUACION PRIMARY KEY(bandeja,file,socio);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_EVALUACION ADD CONSTRAINT R6 FOREIGN KEY (file,socio) REFERENCES esdbempresarial.TBL_FILE(codigo,socio);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_EVALUACION ADD CONSTRAINT R7 FOREIGN KEY (bandeja) REFERENCES esdbempresarial.TBL_BANDEJA(codigo);
+
+CREATE TABLE esdbempresarial.TBL_SITUACION (
+    codigo        INTEGER NOT NULL,
+	bandeja       INTEGER NOT NULL,
+	file          INTEGER NOT NULL,
+	socio         INTEGER NOT NULL,
+	causal        VARCHAR(200) NULL 
+) TABLESPACE ts_data;
+ALTER TABLE IF EXISTS esdbempresarial.TBL_SITUACION ADD CONSTRAINT XPKTBL_SITUACION PRIMARY KEY(codigo);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_SITUACION ADD CONSTRAINT R8 FOREIGN KEY (bandeja,file,socio) REFERENCES esdbempresarial.TBL_EVALUACION(bandeja,file,socio);
+ALTER TABLE IF EXISTS esdbempresarial.TBL_SITUACION ALTER COLUMN codigo SET DEFAULT nextval('esdbempresarial."SEQ_SITUACION"');

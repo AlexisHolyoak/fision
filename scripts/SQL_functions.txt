@@ -1,0 +1,55 @@
+CREATE OR REPLACE FUNCTION esdbempresarial.fn_ingresar_bandeja(
+in_fechaingreso  TIMESTAMP,
+in_causal        VARCHAR(200),
+in_colaborador   INTEGER,
+in_fechaatencion TIMESTAMP = NULL,
+in_enviapor      INTEGER=NULL
+) RETURNS VARCHAR(20) AS $$
+  DECLARE resultado VARCHAR(20);
+          BEGIN
+              resultado := '000';
+			  --select (COALESCE(max(codigo),0)+1) into tmpcodigo from esdbempresarial.TBL_BANDEJA;
+			  insert into esdbempresarial.TBL_BANDEJA(
+			  enviapor,
+			  fechaingreso,
+			  fechaatencion,
+			  causal,
+			  colaborador
+			  ) values(
+			  in_enviapor,
+			  in_fechaingreso,
+			  in_fechaatencion,
+			  in_causal,
+			  in_colaborador
+			  );
+	return resultado;
+	exception when others then
+	return SQLSTATE;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION esdbempresarial.fn_ingresar_documento(
+  in_documentos VARCHAR(200),
+  in_socio INTEGER,
+  in_causal VARCHAR(200)=NULL
+) RETURNS VARCHAR(20) AS $$
+  DECLARE resultado VARCHAR(20);
+  DECLARE cod_tmp INT;
+  DECLARE I INTEGER;
+  DECLARE documentos TEXT[];
+        BEGIN
+            resultado := '000';
+			  
+			select string_to_array(in_documentos, '-') into documentos;
+			SELECT nextval('esdbempresarial."SEQ_DOCUMENTOS"') into cod_tmp ;
+			insert into esdbempresarial.TBL_FILE(codigo, socio, causal) values(cod_tmp,in_socio, in_causal);
+			FOREACH i IN ARRAY documentos
+			LOOP  
+				insert into esdbempresarial.TBL_DOCUMENTOS(file,socio,descripcion) VALUES(cod_tmp,in_socio,documentos[i]) ;
+			END LOOP;
+	
+	return resultado;
+	exception when others then
+	return SQLSTATE;
+END;
+$$ LANGUAGE plpgsql;

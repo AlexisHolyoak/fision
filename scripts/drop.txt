@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS esdbempresarial.fn_ingresar_bandeja(in_enviapor INTEGER,in_fechaingreso TIMESTAMP,in_fechaatencion TIMESTAMP,in_causal VARCHAR(200),in_colaborador INTEGER);
