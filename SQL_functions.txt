@@ -1,0 +1,184 @@
+CREATE OR REPLACE FUNCTION esdbempresarial.fn_ingresar_bandeja(
+in_fechaingreso  TIMESTAMP,
+in_causal        VARCHAR(200),
+in_colaborador   INTEGER,
+in_fechaatencion TIMESTAMP = NULL,
+in_enviapor      INTEGER=NULL
+) RETURNS VARCHAR(20) AS $$
+  DECLARE resultado VARCHAR(20);
+          BEGIN
+              resultado := '000';
+			  --select (COALESCE(max(codigo),0)+1) into tmpcodigo from esdbempresarial.TBL_BANDEJA;
+			  insert into esdbempresarial.TBL_BANDEJA(
+			  enviapor,
+			  fechaingreso,
+			  fechaatencion,
+			  causal,
+			  colaborador
+			  ) values(
+			  in_enviapor,
+			  in_fechaingreso,
+			  in_fechaatencion,
+			  in_causal,
+			  in_colaborador
+			  );
+	return resultado;
+	exception when others then
+	return SQLSTATE;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION esdbempresarial.fn_ingresa_file(
+	in_codigo        INTEGER,
+	in_socio         INTEGER,
+	in_causal        VARCHAR(200) 
+) RETURNS VARCHAR(20) AS $$
+  DECLARE resultado VARCHAR(20);
+          BEGIN
+              resultado := '000';
+			  insert into esdbempresarial.TBL_FILE(
+			  codigo,
+			  socio,
+			  causal
+			  ) values(
+			  in_codigo,
+			  in_socio,
+			  in_causal
+			  );
+	return resultado;
+	exception when others then
+	return SQLSTATE;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION esdbempresarial.fn_ingresar_documento(
+  in_documentos VARCHAR(200),
+  in_socio INTEGER,
+  in_causal VARCHAR(200)=NULL
+) RETURNS VARCHAR(20) AS $$
+  DECLARE resultado VARCHAR(20);
+  DECLARE cod_file INTEGER;
+  DECLARE dato TEXT;
+  DECLARE documentos TEXT[];
+        BEGIN
+            resultado := '000';			  
+			select string_to_array(in_documentos, '-') into documentos;
+		    SELECT nextval('esdbempresarial."SEQ_FILE"') into cod_file;			
+			select esdbempresarial.fn_ingresa_file(cod_file,in_socio,in_causal) into resultado;
+			if(resultado='000')then
+				FOREACH dato IN ARRAY documentos
+				LOOP  
+				   insert into esdbempresarial.TBL_DOCUMENTOS(file,socio,descripcion) VALUES(cod_file,in_socio,dato) ;
+				END LOOP;
+			else
+			 return '111';
+			end if;
+
+	
+	return resultado;
+	exception when others then
+	return SQLSTATE;
+END;
+$$ LANGUAGE plpgsql;
+
+--consultas .------
+CREATE OR REPLACE FUNCTION esdbempresarial.fn_obtener_solicitudes() returns refcursor AS $$
+DECLARE mycurs refcursor;
+ BEGIN
+    OPEN mycurs FOR SELECT 
+	              codigo,
+				  file,
+				  socio,
+				  fechainicio,
+				  fechacierre,
+				  estado, 
+				  descripcion,
+				  causalrechazo 
+				  FROM esdbempresarial.TBL_SOLICITUD;
+	return mycurs;
+ END;
+ $$LANGUAGE plpgsql;
+ 
+CREATE OR REPLACE FUNCTION esdbempresarial.fn_obtener_solicitud(codigo INTEGER) returns refcursor AS $$
+DECLARE mycurs refcursor;
+ BEGIN
+    OPEN mycurs FOR SELECT 
+	              codigo,
+				  file,
+				  socio,
+				  fechainicio,
+				  fechacierre,
+				  estado, 
+				  descripcion,
+				  causalrechazo 
+				  FROM esdbempresarial.TBL_SOLICITUD s where  s.codigo = codigo;
+	return mycurs;
+ END;
+ $$LANGUAGE plpgsql;
+ 
+ CREATE OR REPLACE FUNCTION esdbempresarial.fn_obtener_file(file INTEGER) returns refcursor AS $$
+DECLARE mycurs refcursor;
+ BEGIN
+    OPEN mycurs FOR SELECT 
+	              codigo,
+				  socio,
+				  causal 
+				  FROM esdbempresarial.TBL_FILE f where  f.codigo = file;
+	return mycurs;
+ END;
+ $$LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION esdbempresarial.fn_obtener_documentos(file INTEGER) returns refcursor AS $$
+DECLARE mycurs refcursor;
+ BEGIN
+    OPEN mycurs FOR SELECT 
+	              codigo,
+				  descripcion
+				  FROM esdbempresarial.TBL_DOCUMENTOS d where  d.file = file;
+	return mycurs;
+ END;
+ $$LANGUAGE plpgsql;
+ 
+ CREATE OR REPLACE FUNCTION esdbempresarial.fn_obtener_evaluacion(solicitud INTEGER) returns refcursor AS $$
+DECLARE mycurs refcursor;
+ BEGIN
+    OPEN mycurs FOR SELECT 
+	              fechainicio,
+				  fechafin,
+				  causal,
+				  bandeja
+				  FROM esdbempresarial.TBL_EVALUACION e where  e.solicitud = solicitud;
+	return mycurs;
+ END;
+ $$LANGUAGE plpgsql;
+ 
+  CREATE OR REPLACE FUNCTION esdbempresarial.fn_obtener_bandeja(bandeja INTEGER) returns refcursor AS $$
+DECLARE mycurs refcursor;
+ BEGIN
+    OPEN mycurs FOR SELECT 
+	              codigo,
+				  eviadopor,
+				  fechaingreso,
+				  fecahatencion,
+				  causal,
+				  colaborador 
+				  FROM esdbempresarial.TBL_BANDEJA b where  b.codigo = bandeja;
+	return mycurs;
+ END;
+ $$LANGUAGE plpgsql;
+ 
+CREATE OR REPLACE FUNCTION esdbempresarial.fn_obtener_situacion(evaluacion INTEGER, solicitud INTEGER, file INTEGER, socio INTEGER) returns refcursor AS $$
+DECLARE mycurs refcursor;
+ BEGIN
+    OPEN mycurs FOR SELECT 
+	              codigo,
+				  bandeja,
+				  solicitud,
+				  file,
+				  socio,
+				  causal 
+				  FROM esdbempresarial.TBL_SITUACION s where  s.bandeja = bandeja and s.solicitud=solicitud and s.file=file and s.socio=socio;
+	return mycurs;
+ END;
+ $$LANGUAGE plpgsql;
+ 
